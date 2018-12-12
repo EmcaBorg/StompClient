@@ -1,6 +1,5 @@
 package ua.naiksoftware.stomp.client;
 
-import android.provider.SyncStateContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -17,11 +16,8 @@ import io.reactivex.CompletableObserver;
 import io.reactivex.CompletableSource;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposable;
-import io.reactivex.functions.Consumer;
-import io.reactivex.observers.DisposableObserver;
 import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
-import io.reactivex.subjects.Subject;
 import ua.naiksoftware.stomp.ConnectionProvider;
 import ua.naiksoftware.stomp.LifecycleEvent;
 import ua.naiksoftware.stomp.StompHeader;
@@ -115,43 +111,40 @@ public class StompClient {
             return;
         }
         mLifecycleDisposable = mConnectionProvider.lifecycle()
-                .subscribe(lifecycleEvent -> new Consumer<LifecycleEvent>() {
-                    @Override
-                    public void accept(LifecycleEvent lifecycleEvent) throws Exception {
-                        switch (lifecycleEvent.getType()) {
-                            case OPENED:
-                                List<StompHeader> headers = new ArrayList<>();
-                                headers.add(new StompHeader(StompHeader.VERSION, SUPPORTED_VERSIONS));
-                                headers.add(new StompHeader(StompHeader.HEART_BEAT, "0," + heartbeat));
-                                if (_headers != null) headers.addAll(_headers);
-                                mConnectionProvider.send(new StompMessage(StompCommand.CONNECT, headers, null).compile(legacyWhitespace))
-                                        .subscribe(new CompletableObserver() {
-                                            @Override
-                                            public void onSubscribe(Disposable d) {
-                                            }
-                                            @Override
-                                            public void onComplete() {
-                                            }
-                                            @Override
-                                            public void onError(Throwable e) {
-                                                Log.d(TAG, e.getMessage());
-                                            }
-                                        });
-                                break;
-                            case CLOSED:
-                                Log.d(TAG, "Socket closed");
-                                StompClient.this.setConnected(false);
-                                isConnecting = false;
-                                break;
-                            case ERROR:
-                                Log.d(TAG, "Socket closed with error");
-                                StompClient.this.setConnected(false);
-                                isConnecting = false;
-                                break;
-                        }
+                .subscribe(lifecycleEvent -> {
+                    switch (lifecycleEvent.getType()) {
+                        case OPENED:
+                            List<StompHeader> headers = new ArrayList<>();
+                            headers.add(new StompHeader(StompHeader.VERSION, SUPPORTED_VERSIONS));
+                            headers.add(new StompHeader(StompHeader.HEART_BEAT, "0," + heartbeat));
+                            if (_headers != null) headers.addAll(_headers);
+                            mConnectionProvider.send(new StompMessage(StompCommand.CONNECT, headers, null).compile(legacyWhitespace))
+                                    .subscribe(new CompletableObserver() {
+                                        @Override
+                                        public void onSubscribe(Disposable d) {
+                                        }
+                                        @Override
+                                        public void onComplete() {
+                                        }
+                                        @Override
+                                        public void onError(Throwable e) {
+                                            Log.d(TAG, e.getMessage());
+                                        }
+                                    });
+                            break;
+
+                        case CLOSED:
+                            Log.d(TAG, "Socket closed");
+                            setConnected(false);
+                            isConnecting = false;
+                            break;
+
+                        case ERROR:
+                            Log.d(TAG, "Socket closed with error");
+                            setConnected(false);
+                            isConnecting = false;
+                            break;
                     }
-                }, throwable -> {
-                   Log.d(TAG, throwable.getMessage());
                 });
 
         isConnecting = true;
