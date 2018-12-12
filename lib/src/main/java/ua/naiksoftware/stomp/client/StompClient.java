@@ -151,8 +151,7 @@ public class StompClient {
                         }
                     }
                 }, throwable -> {
-                    StompClient.this.setConnected(false);
-                    isConnecting = false;
+                   Log.d(TAG, throwable.getMessage());
                 });
 
         isConnecting = true;
