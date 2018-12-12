@@ -1,5 +1,6 @@
 package ua.naiksoftware.stomp.client;
 
+import android.provider.SyncStateContract;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.util.Log;
@@ -12,6 +13,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Completable;
+import io.reactivex.CompletableObserver;
 import io.reactivex.CompletableSource;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposable;
@@ -123,7 +125,18 @@ public class StompClient {
                                 headers.add(new StompHeader(StompHeader.HEART_BEAT, "0," + heartbeat));
                                 if (_headers != null) headers.addAll(_headers);
                                 mConnectionProvider.send(new StompMessage(StompCommand.CONNECT, headers, null).compile(legacyWhitespace))
-                                        .subscribe();
+                                        .subscribe(new CompletableObserver() {
+                                            @Override
+                                            public void onSubscribe(Disposable d) {
+                                            }
+                                            @Override
+                                            public void onComplete() {
+                                            }
+                                            @Override
+                                            public void onError(Throwable e) {
+                                                Log.d(TAG, e.getMessage());
+                                            }
+                                        });
                                 break;
                             case CLOSED:
                                 Log.d(TAG, "Socket closed");
