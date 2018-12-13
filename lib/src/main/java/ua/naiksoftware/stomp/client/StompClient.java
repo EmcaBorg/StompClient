@@ -16,6 +16,7 @@ import io.reactivex.CompletableObserver;
 import io.reactivex.CompletableSource;
 import io.reactivex.Flowable;
 import io.reactivex.disposables.Disposable;
+import io.reactivex.functions.Consumer;
 import io.reactivex.subjects.BehaviorSubject;
 import io.reactivex.subjects.PublishSubject;
 import ua.naiksoftware.stomp.ConnectionProvider;
@@ -153,10 +154,9 @@ public class StompClient {
                 .doOnNext(this::callSubscribers)
                 .filter(msg -> msg.getStompCommand().equals(StompCommand.CONNECTED))
                 .subscribe(stompMessage -> {
-                    setConnected(true);
+                    StompClient.this.setConnected(true);
                     isConnecting = false;
-
-                });
+                }, throwable -> Log.d(TAG, throwable.getMessage()));
     }
 
     private void setConnected(boolean connected) {
